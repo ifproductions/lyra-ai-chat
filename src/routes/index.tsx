@@ -17,7 +17,9 @@ import { SettingsDialog } from "@/components/lyra/SettingsDialog";
 import { Sidebar } from "@/components/lyra/Sidebar";
 
 import { Button } from "@/components/ui/button";
+import { detectImagePrompt, pollinationsUrl } from "@/lib/lyra-image";
 import { streamDemo, streamOpenRouter } from "@/lib/lyra-client";
+
 import {
   DEFAULT_MODEL,
   loadConversations,
@@ -183,7 +185,17 @@ function LyraChat() {
 
     try {
       const onDelta = (chunk: string) => appendToLast(conversationId!, chunk);
-      if (settings.apiKey) {
+      const imagePrompt = detectImagePrompt(prompt);
+      if (imagePrompt) {
+        const url = pollinationsUrl(imagePrompt);
+        const reply = `Claro! Aqui está a tua imagem de **${imagePrompt}** 💜\n\n![${imagePrompt}](${url})\n\nSe quiseres outra versão, toca em **Regenerar**.`;
+        for (const token of reply.split(/(\s+)/)) {
+          if (controller.signal.aborted) break;
+          onDelta(token);
+          await new Promise((r) => setTimeout(r, 8));
+        }
+      } else if (settings.apiKey) {
+
         await streamOpenRouter({
           apiKey: settings.apiKey,
           model: settings.model || DEFAULT_MODEL,

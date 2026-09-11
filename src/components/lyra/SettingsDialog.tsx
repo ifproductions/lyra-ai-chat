@@ -91,7 +91,7 @@ export function SettingsDialog({ open, onOpenChange, settings, onSave }: Props) 
 
           <div className="space-y-2">
             <Label htmlFor="model">Modelo</Label>
-            <Select value={custom ? "__custom" : model} onValueChange={setModel}>
+            <Select value={custom ? "" : model} onValueChange={setModel}>
               <SelectTrigger id="model" className="w-full">
                 <SelectValue placeholder="Escolha um modelo" />
               </SelectTrigger>

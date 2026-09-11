@@ -53,7 +53,7 @@ export async function streamOpenRouter({
 }: StreamArgs) {
   const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
-    signal,
+    signal: signal ?? null,
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${apiKey}`,

@@ -18,15 +18,16 @@ export type LyraSettings = {
   model: string;
 };
 
-export const DEFAULT_MODEL = "google/gemini-2.0-flash-exp:free";
+export const DEFAULT_MODEL = "google/gemini-2.0-flash-lite-001:free";
 
 export const MODEL_OPTIONS = [
-  { id: "google/gemini-2.0-flash-exp:free", label: "Gemini 2.0 Flash (grátis) — padrão" },
-  { id: "google/gemini-flash-1.5", label: "Gemini Flash 1.5 — rápido e estável" },
-  { id: "google/gemini-flash-1.5-8b", label: "Gemini Flash 1.5 8B — mais barato" },
-  { id: "google/gemini-2.0-flash-001", label: "Gemini 2.0 Flash — produção" },
-  { id: "google/gemini-pro-1.5", label: "Gemini Pro 1.5 — respostas mais profundas" },
+  { id: "google/gemini-2.0-flash-lite-001:free", label: "Gemini Flash Grátis (Padrão)" },
+  { id: "openai/gpt-4o-mini", label: "GPT-4o Mini" },
+  { id: "meta-llama/llama-3.3-70b-instruct:free", label: "Meta Llama 3.3 Grátis" },
+  { id: "deepseek/deepseek-r1:free", label: "DeepSeek R1 Grátis" },
 ];
+
+const VALID_MODEL_IDS = new Set(MODEL_OPTIONS.map((m) => m.id));
 
 const CONVERSATIONS_KEY = "if-ai:conversations";
 const SETTINGS_KEY = "if-ai:settings";
@@ -60,7 +61,9 @@ export function loadSettings(): LyraSettings {
   try {
     const raw = window.localStorage.getItem(SETTINGS_KEY);
     const parsed = raw ? (JSON.parse(raw) as Partial<LyraSettings>) : {};
-    return { apiKey: parsed.apiKey ?? "", model: parsed.model || DEFAULT_MODEL };
+    const savedModel = parsed.model || DEFAULT_MODEL;
+    const model = VALID_MODEL_IDS.has(savedModel) ? savedModel : DEFAULT_MODEL;
+    return { apiKey: parsed.apiKey ?? "", model };
   } catch {
     return { apiKey: "", model: DEFAULT_MODEL };
   }

@@ -17,7 +17,9 @@ import { SettingsDialog } from "@/components/lyra/SettingsDialog";
 import { Sidebar } from "@/components/lyra/Sidebar";
 
 import { Button } from "@/components/ui/button";
+import { detectImagePrompt, pollinationsUrl } from "@/lib/lyra-image";
 import { streamDemo, streamOpenRouter } from "@/lib/lyra-client";
+
 import {
   DEFAULT_MODEL,
   loadConversations,

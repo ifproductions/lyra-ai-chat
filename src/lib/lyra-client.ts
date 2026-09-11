@@ -1,0 +1,120 @@
+import type { ChatMessage } from "./lyra-store";
+
+export const LYRA_SYSTEM_PROMPT = `Você é a Lyra AI, a assistente inteligente da IF Productions ("IF AI").
+Seu lema é "O Mundo Precisa de ti". Você é calorosa, direta e criativa.
+Responda sempre no idioma do usuário (por padrão, português).
+Use Markdown: títulos, listas, tabelas e blocos de código com a linguagem indicada.`;
+
+export type StreamArgs = {
+  apiKey: string;
+  model: string;
+  messages: ChatMessage[];
+  signal?: AbortSignal;
+  onDelta: (chunk: string) => void;
+};
+
+/** Resposta simulada usada quando nenhuma chave da OpenRouter foi configurada. */
+export async function streamDemo({
+  messages,
+  onDelta,
+  signal,
+}: Pick<StreamArgs, "messages" | "onDelta" | "signal">) {
+  const last = messages[messages.length - 1]?.content ?? "";
+  const reply = `Olá! Eu sou a **Lyra AI** 💜
+
+Estou no **modo demonstração**, porque ainda não há uma chave da OpenRouter configurada.
+
+Você perguntou:
+
+> ${last.slice(0, 300)}
+
+Para respostas reais, abra **Configurações** (ícone de engrenagem), cole a sua chave da OpenRouter e escolha um modelo.
+
+\`\`\`ts
+// depois disso, é só conversar
+const lyra = "pronta";
+\`\`\`
+
+*O Mundo Precisa de ti.*`;
+
+  for (const token of reply.split(/(\s+)/)) {
+    if (signal?.aborted) return;
+    onDelta(token);
+    await new Promise((r) => setTimeout(r, 14));
+  }
+}
+
+export async function streamOpenRouter({
+  apiKey,
+  model,
+  messages,
+  signal,
+  onDelta,
+}: StreamArgs) {
+  const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    method: "POST",
+    signal,
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+      "X-Title": "IF AI — Lyra",
+    },
+    body: JSON.stringify({
+      model,
+      stream: true,
+      messages: [
+        { role: "system", content: LYRA_SYSTEM_PROMPT },
+        ...messages.map((m) => ({ role: m.role, content: m.content })),
+      ],
+    }),
+  });
+
+  if (!response.ok || !response.body) {
+    const text = await response.text().catch(() => "");
+    let message = text;
+    try {
+      message = (JSON.parse(text) as { error?: { message?: string } }).error?.message ?? text;
+    } catch {
+      /* corpo não é JSON */
+    }
+    if (response.status === 401) {
+      throw new Error("Chave da OpenRouter inválida. Verifique em Configurações.");
+    }
+    if (response.status === 402) {
+      throw new Error("Sem créditos na sua conta OpenRouter para este modelo.");
+    }
+    if (response.status === 429) {
+      throw new Error("Muitos pedidos seguidos. Espere alguns segundos e tente de novo.");
+    }
+    throw new Error(message || `Falha na resposta (${response.status}).`);
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+
+    const lines = buffer.split("\n");
+    buffer = lines.pop() ?? "";
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed.startsWith("data:")) continue;
+      const data = trimmed.slice(5).trim();
+      if (!data || data === "[DONE]") continue;
+      try {
+        const parsed = JSON.parse(data) as {
+          choices?: { delta?: { content?: string } }[];
+        };
+        const delta = parsed.choices?.[0]?.delta?.content;
+        if (delta) onDelta(delta);
+      } catch {
+        /* keep-alive ou fragmento incompleto */
+      }
+    }
+  }
+}

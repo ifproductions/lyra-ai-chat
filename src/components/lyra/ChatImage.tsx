@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { pollinationsUrl, promptFromUrl, randomSeed } from "@/lib/lyra-image";
 import { cn } from "@/lib/utils";
 
-export function ChatImage({ src, alt }: { src: string; alt?: string }) {
+export function ChatImage({ src, alt }: { src: string; alt?: string | undefined }) {
   const [url, setUrl] = useState(src);
   const [loaded, setLoaded] = useState(false);
   const [failed, setFailed] = useState(false);

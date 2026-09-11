@@ -51,14 +51,31 @@ export async function streamOpenRouter({
   signal,
   onDelta,
 }: StreamArgs) {
+  const trimmedKey = (apiKey ?? "").trim();
+  if (!trimmedKey) {
+    throw new Error("Chave da API em falta. Configura-a nas definições.");
+  }
+
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${trimmedKey}`,
+    "HTTP-Referer": "https://israelfranco-ai.com",
+    "X-Title": "IF AI",
+  };
+
+  for (const [key, value] of Object.entries(headers)) {
+    if (value === undefined || value === null) {
+      throw new Error(`Cabeçalho inválido: ${key} está indefinido.`);
+    }
+    if (/[^\x00-\x7F]/.test(value)) {
+      throw new Error(`Cabeçalho ${key} contém caracteres não-ASCII.`);
+    }
+  }
+
   const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
     signal: signal ?? null,
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
-      "X-Title": "IF AI — Lyra",
-    },
+    headers,
     body: JSON.stringify({
       model,
       stream: true,

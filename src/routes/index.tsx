@@ -1,10 +1,21 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowUp, Settings, Sparkle, Square } from "lucide-react";
+import {
+  ArrowUp,
+  CalendarDays,
+  Clapperboard,
+  Code2,
+  Megaphone,
+  Settings,
+  Sparkle,
+  Square,
+} from "lucide-react";
 
+import { IFLogo, IFStripes } from "@/components/lyra/IFLogo";
 import { Markdown } from "@/components/lyra/Markdown";
 import { SettingsDialog } from "@/components/lyra/SettingsDialog";
 import { Sidebar } from "@/components/lyra/Sidebar";
+
 import { Button } from "@/components/ui/button";
 import { streamDemo, streamOpenRouter } from "@/lib/lyra-client";
 import {
@@ -44,11 +55,28 @@ export const Route = createFileRoute("/")({
 });
 
 const SUGGESTIONS = [
-  "Escreve um argumento curto para um anúncio da IF Productions",
-  "Explica-me streaming de vídeo como se eu tivesse 12 anos",
-  "Cria um plano de conteúdos para 7 dias no Instagram",
-  "Dá-me um exemplo de código React com animação",
+  {
+    icon: Megaphone,
+    title: "Escreve um argumento curto para um anúncio da IF Productions",
+    prompt: "Escreve um argumento curto e criativo para um anúncio da IF Productions.",
+  },
+  {
+    icon: Clapperboard,
+    title: "Explica streaming de vídeo de forma simples",
+    prompt: "Explica-me streaming de vídeo como se eu tivesse 12 anos.",
+  },
+  {
+    icon: CalendarDays,
+    title: "Cria um plano de conteúdos para 7 dias no Instagram",
+    prompt: "Cria um plano de conteúdos para 7 dias no Instagram de um estúdio criativo.",
+  },
+  {
+    icon: Code2,
+    title: "Dá-me um exemplo de código React com animação",
+    prompt: "Dá-me um exemplo de código React com uma animação simples e elegante.",
+  },
 ];
+
 
 function LyraChat() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -244,26 +272,37 @@ function LyraChat() {
           <div className="mx-auto w-full max-w-3xl px-5 pb-56 pt-8">
             {empty ? (
               <div className="flex flex-col items-center pt-10 text-center">
-                <div className="glow-purple flex size-16 items-center justify-center rounded-2xl bg-primary/15">
-                  <Sparkle className="size-8 text-primary" />
-                </div>
-                <h2 className="mt-6 text-2xl font-semibold">Olá, eu sou a Lyra</h2>
-                <p className="mt-2 max-w-md text-sm text-muted-foreground">
-                  A assistente da IF Productions. Pergunta o que quiseres — ideias, textos,
-                  código ou estratégia.
+                <IFStripes className="mb-6" />
+                <IFLogo className="size-16 glow-purple" />
+                <h2 className="mt-7 bg-[linear-gradient(100deg,var(--color-foreground),color-mix(in_oklab,var(--color-primary)_65%,var(--color-foreground)))] bg-clip-text text-4xl font-extrabold tracking-tight text-transparent sm:text-5xl">
+                  Olá, como posso ajudar?
+                </h2>
+                <p className="mt-3 max-w-md text-sm text-muted-foreground">
+                  Sou a Lyra, a assistente da IF Productions. Escolhe uma sugestão ou escreve
+                  a tua pergunta.
                 </p>
-                <div className="mt-8 grid w-full gap-3 sm:grid-cols-2">
-                  {SUGGESTIONS.map((s) => (
+                <div className="mt-10 grid w-full gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                  {SUGGESTIONS.map(({ icon: Icon, title, prompt }) => (
                     <button
-                      key={s}
-                      onClick={() => send(s)}
-                      className="rounded-2xl border border-border bg-card/70 p-4 text-left text-sm text-foreground/85 transition-colors hover:border-primary/50 hover:bg-surface"
+                      key={title}
+                      onClick={() => send(prompt)}
+                      className="group relative flex h-full flex-col gap-3 overflow-hidden rounded-2xl border border-border bg-card/70 p-4 text-left transition-all hover:-translate-y-0.5 hover:border-primary/50 hover:bg-surface"
                     >
-                      {s}
+                      <span
+                        aria-hidden
+                        className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-primary/0 via-primary to-primary/0 opacity-0 transition-opacity group-hover:opacity-100"
+                      />
+                      <span className="grid size-9 place-items-center rounded-xl bg-primary/15 text-primary ring-1 ring-primary/25">
+                        <Icon className="size-4.5" />
+                      </span>
+                      <span className="text-sm font-medium leading-snug text-foreground/90">
+                        {title}
+                      </span>
                     </button>
                   ))}
                 </div>
               </div>
+
             ) : (
               <div className="space-y-7">
                 {messages.map((m, i) => {

@@ -61,7 +61,9 @@ export function loadSettings(): LyraSettings {
   try {
     const raw = window.localStorage.getItem(SETTINGS_KEY);
     const parsed = raw ? (JSON.parse(raw) as Partial<LyraSettings>) : {};
-    return { apiKey: parsed.apiKey ?? "", model: parsed.model || DEFAULT_MODEL };
+    const savedModel = parsed.model || DEFAULT_MODEL;
+    const model = VALID_MODEL_IDS.has(savedModel) ? savedModel : DEFAULT_MODEL;
+    return { apiKey: parsed.apiKey ?? "", model };
   } catch {
     return { apiKey: "", model: DEFAULT_MODEL };
   }

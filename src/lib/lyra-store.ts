@@ -18,15 +18,14 @@ export type LyraSettings = {
   model: string;
 };
 
-export const DEFAULT_MODEL = "openai/gpt-4o-mini";
+export const DEFAULT_MODEL = "google/gemini-2.0-flash-exp:free";
 
 export const MODEL_OPTIONS = [
-  { id: "openai/gpt-4o-mini", label: "GPT-4o mini — rápido e barato" },
-  { id: "openai/gpt-4o", label: "GPT-4o — equilibrado" },
-  { id: "anthropic/claude-3.5-sonnet", label: "Claude 3.5 Sonnet — escrita rica" },
-  { id: "google/gemini-2.0-flash-001", label: "Gemini 2.0 Flash — muito rápido" },
-  { id: "meta-llama/llama-3.3-70b-instruct", label: "Llama 3.3 70B — open source" },
-  { id: "deepseek/deepseek-chat", label: "DeepSeek Chat — raciocínio" },
+  { id: "google/gemini-2.0-flash-exp:free", label: "Gemini 2.0 Flash (grátis) — padrão" },
+  { id: "google/gemini-flash-1.5", label: "Gemini Flash 1.5 — rápido e estável" },
+  { id: "google/gemini-flash-1.5-8b", label: "Gemini Flash 1.5 8B — mais barato" },
+  { id: "google/gemini-2.0-flash-001", label: "Gemini 2.0 Flash — produção" },
+  { id: "google/gemini-pro-1.5", label: "Gemini Pro 1.5 — respostas mais profundas" },
 ];
 
 const CONVERSATIONS_KEY = "if-ai:conversations";

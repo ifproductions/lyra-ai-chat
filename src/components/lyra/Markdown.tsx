@@ -2,6 +2,8 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 import { ChatImage } from "./ChatImage";
+import { ChatVideo } from "./ChatVideo";
+import { isVideoSrc, promptFromVideoSrc } from "@/lib/lyra-video";
 
 export function Markdown({ content }: { content: string }) {
   return (
@@ -10,8 +12,13 @@ export function Markdown({ content }: { content: string }) {
         remarkPlugins={[remarkGfm]}
         components={{
           a: (props) => <a {...props} target="_blank" rel="noreferrer" />,
-          img: ({ src, alt }) =>
-            typeof src === "string" ? <ChatImage src={src} alt={alt} /> : null,
+          img: ({ src, alt }) => {
+            if (typeof src !== "string") return null;
+            if (isVideoSrc(src)) {
+              return <ChatVideo prompt={promptFromVideoSrc(src)} alt={alt} />;
+            }
+            return <ChatImage src={src} alt={alt} />;
+          },
           p: ({ children }) => <div className="lyra-p">{children}</div>,
         }}
       >

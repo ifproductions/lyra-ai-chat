@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ExternalLink, Eye, EyeOff, KeyRound } from "lucide-react";
+import { Moon, Settings2, Sun } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -10,7 +10,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -19,7 +18,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { MODEL_OPTIONS, type LyraSettings } from "@/lib/lyra-store";
+import { MODEL_OPTIONS, type LyraSettings, type Theme } from "@/lib/lyra-store";
+import { cn } from "@/lib/utils";
 
 type Props = {
   open: boolean;
@@ -28,70 +28,66 @@ type Props = {
   onSave: (settings: LyraSettings) => void;
 };
 
+const THEMES: { id: Theme; label: string; icon: typeof Sun }[] = [
+  { id: "dark", label: "Escuro", icon: Moon },
+  { id: "light", label: "Claro", icon: Sun },
+];
+
 export function SettingsDialog({ open, onOpenChange, settings, onSave }: Props) {
-  const [apiKey, setApiKey] = useState(settings.apiKey);
   const [model, setModel] = useState(settings.model);
-  const [reveal, setReveal] = useState(false);
+  const [theme, setTheme] = useState<Theme>(settings.theme);
 
   useEffect(() => {
     if (open) {
-      setApiKey(settings.apiKey);
       setModel(settings.model);
-      setReveal(false);
+      setTheme(settings.theme);
     }
   }, [open, settings]);
-
-  const custom = !MODEL_OPTIONS.some((m) => m.id === model);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="border-border bg-card sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <KeyRound className="size-4 text-primary" />
-            Configurações da Lyra
+            <Settings2 className="size-4 text-primary" />
+            Configurações
           </DialogTitle>
           <DialogDescription>
-            A sua chave fica guardada apenas neste navegador e é usada para falar com a
-            OpenRouter.
+            Personalize a aparência e a inteligência da Lyra. Não precisa de nenhuma chave.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-5 py-2">
+        <div className="space-y-6 py-2">
           <div className="space-y-2">
-            <Label htmlFor="api-key">Chave de API da OpenRouter</Label>
-            <div className="relative">
-              <Input
-                id="api-key"
-                type={reveal ? "text" : "password"}
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-                placeholder="sk-or-v1-..."
-                autoComplete="off"
-                className="pr-10 font-mono text-sm"
-              />
-              <button
-                type="button"
-                onClick={() => setReveal((v) => !v)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
-                aria-label={reveal ? "Esconder chave" : "Mostrar chave"}
-              >
-                {reveal ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-              </button>
+            <Label>Aparência</Label>
+            <div className="grid grid-cols-2 gap-3">
+              {THEMES.map(({ id, label, icon: Icon }) => (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => {
+                    setTheme(id);
+                    onSave({ model, theme: id });
+                  }}
+                  className={cn(
+                    "flex items-center gap-3 rounded-2xl border p-3 text-left text-sm transition-all",
+                    theme === id
+                      ? "border-primary/60 bg-primary/10 text-foreground"
+                      : "border-border bg-surface/60 text-muted-foreground hover:border-primary/30",
+                  )}
+                >
+                  <span className="grid size-9 place-items-center rounded-xl bg-primary/15 text-primary">
+                    <Icon className="size-4" />
+                  </span>
+                  <span className="font-medium">{label}</span>
+                </button>
+              ))}
             </div>
-            <a
-              href="https://openrouter.ai/keys"
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
-            >
-              Obter uma chave em openrouter.ai <ExternalLink className="size-3" />
-            </a>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="model">Modelo</Label>
-            <Select value={custom ? "" : model} onValueChange={setModel}>
+            <Label htmlFor="model">Inteligência</Label>
+            <Select value={model} onValueChange={setModel}>
               <SelectTrigger id="model" className="w-full">
                 <SelectValue placeholder="Escolha um modelo" />
               </SelectTrigger>
@@ -103,12 +99,9 @@ export function SettingsDialog({ open, onOpenChange, settings, onSave }: Props) 
                 ))}
               </SelectContent>
             </Select>
-            <Input
-              value={model}
-              onChange={(e) => setModel(e.target.value)}
-              placeholder="ou escreva outro identificador de modelo"
-              className="font-mono text-xs"
-            />
+            <p className="text-xs text-muted-foreground">
+              A Lyra responde com GPT-4 e pesquisa na web em tempo real.
+            </p>
           </div>
         </div>
 
@@ -118,7 +111,7 @@ export function SettingsDialog({ open, onOpenChange, settings, onSave }: Props) 
           </Button>
           <Button
             onClick={() => {
-              onSave({ apiKey: apiKey.trim(), model: model.trim() });
+              onSave({ model, theme });
               onOpenChange(false);
             }}
           >

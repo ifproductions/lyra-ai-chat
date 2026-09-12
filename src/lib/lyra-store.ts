@@ -13,18 +13,18 @@ export type Conversation = {
   messages: ChatMessage[];
 };
 
+export type Theme = "dark" | "light";
+
 export type LyraSettings = {
-  apiKey: string;
   model: string;
+  theme: Theme;
 };
 
-export const DEFAULT_MODEL = "google/gemini-2.0-flash-lite-001:free";
+export const DEFAULT_MODEL = "openai/gpt-4o-mini";
 
 export const MODEL_OPTIONS = [
-  { id: "google/gemini-2.0-flash-lite-001:free", label: "Gemini Flash Grátis (Padrão)" },
-  { id: "openai/gpt-4o-mini", label: "GPT-4o Mini" },
-  { id: "meta-llama/llama-3.3-70b-instruct:free", label: "Meta Llama 3.3 Grátis" },
-  { id: "deepseek/deepseek-r1:free", label: "DeepSeek R1 Grátis" },
+  { id: "openai/gpt-4o-mini", label: "GPT-4o Mini (Padrão, rápido)" },
+  { id: "openai/gpt-4o", label: "GPT-4o (Máxima qualidade)" },
 ];
 
 const VALID_MODEL_IDS = new Set(MODEL_OPTIONS.map((m) => m.id));
@@ -56,22 +56,32 @@ export function saveConversations(conversations: Conversation[]) {
   }
 }
 
+export const DEFAULT_SETTINGS: LyraSettings = { model: DEFAULT_MODEL, theme: "dark" };
+
 export function loadSettings(): LyraSettings {
-  if (typeof window === "undefined") return { apiKey: "", model: DEFAULT_MODEL };
+  if (typeof window === "undefined") return DEFAULT_SETTINGS;
   try {
     const raw = window.localStorage.getItem(SETTINGS_KEY);
     const parsed = raw ? (JSON.parse(raw) as Partial<LyraSettings>) : {};
     const savedModel = parsed.model || DEFAULT_MODEL;
-    const model = VALID_MODEL_IDS.has(savedModel) ? savedModel : DEFAULT_MODEL;
-    return { apiKey: parsed.apiKey ?? "", model };
+    return {
+      model: VALID_MODEL_IDS.has(savedModel) ? savedModel : DEFAULT_MODEL,
+      theme: parsed.theme === "light" ? "light" : "dark",
+    };
   } catch {
-    return { apiKey: "", model: DEFAULT_MODEL };
+    return DEFAULT_SETTINGS;
   }
 }
 
 export function saveSettings(settings: LyraSettings) {
   if (typeof window === "undefined") return;
   window.localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+}
+
+export function applyTheme(theme: Theme) {
+  if (typeof document === "undefined") return;
+  document.documentElement.classList.toggle("dark", theme === "dark");
+  document.documentElement.classList.toggle("light", theme === "light");
 }
 
 export function titleFrom(text: string) {

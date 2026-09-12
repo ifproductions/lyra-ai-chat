@@ -11,6 +11,7 @@ import {
   Square,
 } from "lucide-react";
 
+import { AuthMenu } from "@/components/lyra/AuthMenu";
 import { IFLogo, IFStripes } from "@/components/lyra/IFLogo";
 import { Markdown } from "@/components/lyra/Markdown";
 import { SettingsDialog } from "@/components/lyra/SettingsDialog";
@@ -18,10 +19,13 @@ import { Sidebar } from "@/components/lyra/Sidebar";
 
 import { Button } from "@/components/ui/button";
 import { detectImagePrompt, pollinationsUrl } from "@/lib/lyra-image";
-import { streamDemo, streamOpenRouter } from "@/lib/lyra-client";
+import { detectVideoPrompt, videoMarkdownSrc } from "@/lib/lyra-video";
+import { streamLyra } from "@/lib/lyra-client";
 
 import {
   DEFAULT_MODEL,
+  DEFAULT_SETTINGS,
+  applyTheme,
   loadConversations,
   loadSettings,
   newId,
@@ -83,7 +87,7 @@ const SUGGESTIONS = [
 function LyraChat() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [settings, setSettings] = useState<LyraSettings>({ apiKey: "", model: DEFAULT_MODEL });
+  const [settings, setSettings] = useState<LyraSettings>(DEFAULT_SETTINGS);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [input, setInput] = useState("");
@@ -96,7 +100,9 @@ function LyraChat() {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   useEffect(() => {
-    setSettings(loadSettings());
+    const loaded = loadSettings();
+    setSettings(loaded);
+    applyTheme(loaded.theme);
     setConversations(loadConversations());
     setSidebarOpen(window.innerWidth >= 768);
     setHydrated(true);
@@ -186,25 +192,31 @@ function LyraChat() {
     try {
       const onDelta = (chunk: string) => appendToLast(conversationId!, chunk);
       const imagePrompt = detectImagePrompt(prompt);
-      if (imagePrompt) {
-        const url = pollinationsUrl(imagePrompt);
-        const reply = `Claro! Aqui está a tua imagem de **${imagePrompt}** 💜\n\n![${imagePrompt}](${url})\n\nSe quiseres outra versão, toca em **Regenerar**.`;
-        for (const token of reply.split(/(\s+)/)) {
+      const videoPrompt = detectVideoPrompt(prompt);
+
+      const localReply = videoPrompt
+        ? `Perfeito! Aqui está o teu vídeo de **${videoPrompt}** 🎬\n\n![${videoPrompt}](${videoMarkdownSrc(
+            videoPrompt,
+          )})\n\nPodes reproduzir, ampliar, baixar uma cena ou **Regenerar** para outra versão.`
+        : imagePrompt
+          ? `Claro! Aqui está a tua imagem de **${imagePrompt}** 💜\n\n![${imagePrompt}](${pollinationsUrl(
+              imagePrompt,
+            )})\n\nSe quiseres outra versão, toca em **Regenerar**.`
+          : null;
+
+      if (localReply) {
+        for (const token of localReply.split(/(\s+)/)) {
           if (controller.signal.aborted) break;
           onDelta(token);
           await new Promise((r) => setTimeout(r, 8));
         }
-      } else if (settings.apiKey) {
-
-        await streamOpenRouter({
-          apiKey: settings.apiKey,
+      } else {
+        await streamLyra({
           model: settings.model || DEFAULT_MODEL,
           messages: history,
           signal: controller.signal,
           onDelta,
         });
-      } else {
-        await streamDemo({ messages: history, signal: controller.signal, onDelta });
       }
     } catch (err) {
       if ((err as Error).name !== "AbortError") {
@@ -266,8 +278,8 @@ function LyraChat() {
             <p className="truncate text-xs text-muted-foreground">O Mundo Precisa de ti</p>
           </div>
           <div className="flex items-center gap-2">
-            <span className="hidden rounded-full border border-border bg-surface px-3 py-1 text-xs text-muted-foreground sm:inline">
-              {settings.apiKey ? settings.model || DEFAULT_MODEL : "modo demonstração"}
+            <span className="hidden rounded-full border border-border bg-surface px-3 py-1 text-xs text-muted-foreground lg:inline">
+              {settings.model || DEFAULT_MODEL}
             </span>
             <Button
               variant="ghost"
@@ -277,6 +289,7 @@ function LyraChat() {
             >
               <Settings className="size-5" />
             </Button>
+            <AuthMenu />
           </div>
         </header>
 
@@ -428,6 +441,7 @@ function LyraChat() {
         onSave={(s) => {
           setSettings(s);
           saveSettings(s);
+          applyTheme(s.theme);
         }}
       />
     </div>

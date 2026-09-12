@@ -441,6 +441,7 @@ function LyraChat() {
         onSave={(s) => {
           setSettings(s);
           saveSettings(s);
+          applyTheme(s.theme);
         }}
       />
     </div>

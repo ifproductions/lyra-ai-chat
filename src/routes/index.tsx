@@ -11,6 +11,7 @@ import {
   Square,
 } from "lucide-react";
 
+import { AuthMenu } from "@/components/lyra/AuthMenu";
 import { IFLogo, IFStripes } from "@/components/lyra/IFLogo";
 import { Markdown } from "@/components/lyra/Markdown";
 import { SettingsDialog } from "@/components/lyra/SettingsDialog";
@@ -18,10 +19,13 @@ import { Sidebar } from "@/components/lyra/Sidebar";
 
 import { Button } from "@/components/ui/button";
 import { detectImagePrompt, pollinationsUrl } from "@/lib/lyra-image";
-import { streamDemo, streamOpenRouter } from "@/lib/lyra-client";
+import { detectVideoPrompt, videoMarkdownSrc } from "@/lib/lyra-video";
+import { streamLyra } from "@/lib/lyra-client";
 
 import {
   DEFAULT_MODEL,
+  DEFAULT_SETTINGS,
+  applyTheme,
   loadConversations,
   loadSettings,
   newId,

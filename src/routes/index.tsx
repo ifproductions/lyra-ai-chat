@@ -192,25 +192,31 @@ function LyraChat() {
     try {
       const onDelta = (chunk: string) => appendToLast(conversationId!, chunk);
       const imagePrompt = detectImagePrompt(prompt);
-      if (imagePrompt) {
-        const url = pollinationsUrl(imagePrompt);
-        const reply = `Claro! Aqui está a tua imagem de **${imagePrompt}** 💜\n\n![${imagePrompt}](${url})\n\nSe quiseres outra versão, toca em **Regenerar**.`;
-        for (const token of reply.split(/(\s+)/)) {
+      const videoPrompt = detectVideoPrompt(prompt);
+
+      const localReply = videoPrompt
+        ? `Perfeito! Aqui está o teu vídeo de **${videoPrompt}** 🎬\n\n![${videoPrompt}](${videoMarkdownSrc(
+            videoPrompt,
+          )})\n\nPodes reproduzir, ampliar, baixar uma cena ou **Regenerar** para outra versão.`
+        : imagePrompt
+          ? `Claro! Aqui está a tua imagem de **${imagePrompt}** 💜\n\n![${imagePrompt}](${pollinationsUrl(
+              imagePrompt,
+            )})\n\nSe quiseres outra versão, toca em **Regenerar**.`
+          : null;
+
+      if (localReply) {
+        for (const token of localReply.split(/(\s+)/)) {
           if (controller.signal.aborted) break;
           onDelta(token);
           await new Promise((r) => setTimeout(r, 8));
         }
-      } else if (settings.apiKey) {
-
-        await streamOpenRouter({
-          apiKey: settings.apiKey,
+      } else {
+        await streamLyra({
           model: settings.model || DEFAULT_MODEL,
           messages: history,
           signal: controller.signal,
           onDelta,
         });
-      } else {
-        await streamDemo({ messages: history, signal: controller.signal, onDelta });
       }
     } catch (err) {
       if ((err as Error).name !== "AbortError") {

@@ -87,7 +87,7 @@ const SUGGESTIONS = [
 function LyraChat() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [settings, setSettings] = useState<LyraSettings>({ apiKey: "", model: DEFAULT_MODEL });
+  const [settings, setSettings] = useState<LyraSettings>(DEFAULT_SETTINGS);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [input, setInput] = useState("");
@@ -100,7 +100,9 @@ function LyraChat() {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   useEffect(() => {
-    setSettings(loadSettings());
+    const loaded = loadSettings();
+    setSettings(loaded);
+    applyTheme(loaded.theme);
     setConversations(loadConversations());
     setSidebarOpen(window.innerWidth >= 768);
     setHydrated(true);

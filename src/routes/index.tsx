@@ -278,8 +278,8 @@ function LyraChat() {
             <p className="truncate text-xs text-muted-foreground">O Mundo Precisa de ti</p>
           </div>
           <div className="flex items-center gap-2">
-            <span className="hidden rounded-full border border-border bg-surface px-3 py-1 text-xs text-muted-foreground sm:inline">
-              {settings.apiKey ? settings.model || DEFAULT_MODEL : "modo demonstração"}
+            <span className="hidden rounded-full border border-border bg-surface px-3 py-1 text-xs text-muted-foreground lg:inline">
+              {settings.model || DEFAULT_MODEL}
             </span>
             <Button
               variant="ghost"
@@ -289,6 +289,7 @@ function LyraChat() {
             >
               <Settings className="size-5" />
             </Button>
+            <AuthMenu />
           </div>
         </header>
 

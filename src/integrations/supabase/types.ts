@@ -18,22 +18,40 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string
+          custom_avatar_path: string | null
           display_name: string | null
+          history_enabled: boolean
           id: string
+          locale: string
+          performance_mode: boolean
+          privacy_analytics: boolean
+          theme: string
           updated_at: string
         }
         Insert: {
           avatar_url?: string | null
           created_at?: string
+          custom_avatar_path?: string | null
           display_name?: string | null
+          history_enabled?: boolean
           id: string
+          locale?: string
+          performance_mode?: boolean
+          privacy_analytics?: boolean
+          theme?: string
           updated_at?: string
         }
         Update: {
           avatar_url?: string | null
           created_at?: string
+          custom_avatar_path?: string | null
           display_name?: string | null
+          history_enabled?: boolean
           id?: string
+          locale?: string
+          performance_mode?: boolean
+          privacy_analytics?: boolean
+          theme?: string
           updated_at?: string
         }
         Relationships: []

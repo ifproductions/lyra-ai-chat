@@ -5,7 +5,7 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * IF AI — Lyra design system.
+ * Lyra AI design system.
  * Dark base #0C0A10 with electric purple #9333EA accents.
  * All colors are semantic tokens; never hardcode colors in components.
  */
@@ -231,3 +231,6 @@
 .lyra-md hr {
   border-color: var(--color-border);
 }
+
+.performance-mode *, .performance-mode *::before, .performance-mode *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; } }

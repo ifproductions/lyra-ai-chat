@@ -3,8 +3,8 @@ import { Download, Maximize2, Pause, Play, RefreshCw } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { randomSeed } from "@/lib/lyra-image";
-import { VIDEO_FRAME_COUNT, videoFrameUrls } from "@/lib/lyra-video";
+import { randomSeed } from "@/lib/lyrem-image";
+import { VIDEO_FRAME_COUNT, videoFrameUrls } from "@/lib/lyrem-video";
 
 export function ChatVideo({ prompt, alt }: { prompt: string; alt?: string | undefined }) {
   const [seed, setSeed] = useState(() => randomSeed());
@@ -40,7 +40,7 @@ export function ChatVideo({ prompt, alt }: { prompt: string; alt?: string | unde
       const href = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = href;
-      a.download = `lyra-video-${Date.now()}.png`;
+      a.download = `lyrem-video-${Date.now()}.png`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -57,7 +57,7 @@ export function ChatVideo({ prompt, alt }: { prompt: string; alt?: string | unde
           <img
             key={src}
             src={src}
-            alt={alt || `Vídeo gerado pela Lyra AI — cena ${i + 1}`}
+            alt={alt || `Vídeo gerado pela Lyrem AI — cena ${i + 1}`}
             onLoad={() => setReady((r) => r + 1)}
             onError={() => setReady((r) => r + 1)}
             className="absolute inset-0 size-full object-cover transition-opacity duration-200"
@@ -113,10 +113,10 @@ export function ChatVideo({ prompt, alt }: { prompt: string; alt?: string | unde
 
       <Dialog open={zoom} onOpenChange={setZoom}>
         <DialogContent className="max-w-5xl border-primary/30 bg-card/95 p-3">
-          <DialogTitle className="sr-only">{alt || "Vídeo gerado pela Lyra AI"}</DialogTitle>
+          <DialogTitle className="sr-only">{alt || "Vídeo gerado pela Lyrem AI"}</DialogTitle>
           <img
             src={frames[frame]}
-            alt={alt || "Vídeo gerado pela Lyra AI"}
+            alt={alt || "Vídeo gerado pela Lyrem AI"}
             className="max-h-[80vh] w-full rounded-xl object-contain"
           />
         </DialogContent>

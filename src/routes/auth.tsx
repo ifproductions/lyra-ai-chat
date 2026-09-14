@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ArrowLeft, Loader2 } from "lucide-react";
 
-import { LyraLogo } from "@/components/lyra/LyraLogo";
+import { LyremLogo } from "@/components/lyrem/LyremLogo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,16 +17,16 @@ export const Route = createFileRoute("/auth")({
   }),
   head: () => ({
     meta: [
-      { title: "Entrar na Lyra AI — Lyra" },
+      { title: "Entrar na Lyrem AI — Lyrem" },
       {
         name: "description",
         content:
-          "Crie a sua conta Lyra AI ou entre para guardar as suas conversas com a Lyra, a assistente da Lyra 4 Pro.",
+          "Crie a sua conta Lyrem AI ou entre para guardar as suas conversas com a Lyrem, a assistente da Lyrem 4 Pro.",
       },
-      { property: "og:title", content: "Entrar na Lyra AI — Lyra" },
+      { property: "og:title", content: "Entrar na Lyrem AI — Lyrem" },
       {
         property: "og:description",
-        content: "Crie a sua conta Lyra AI ou entre para conversar com a Lyra.",
+        content: "Crie a sua conta Lyrem AI ou entre para conversar com a Lyrem.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -111,11 +111,11 @@ function AuthPage() {
         </Link>
 
         <div className="flex flex-col items-center text-center">
-          <LyraLogo className="size-16" />
+          <LyremLogo className="size-16" />
           <h1 className="mt-5 text-2xl font-bold tracking-tight">
-            {mode === "signup" ? "Criar conta na Lyra AI" : "Bem-vindo de volta"}
+            {mode === "signup" ? "Criar conta na Lyrem AI" : "Bem-vindo de volta"}
           </h1>
-          <p className="mt-1 text-sm text-muted-foreground">Lyra 4 Pro</p>
+          <p className="mt-1 text-sm text-muted-foreground">Lyrem 4 Pro</p>
         </div>
 
         <Button

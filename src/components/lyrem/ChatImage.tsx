@@ -3,7 +3,7 @@ import { Download, Maximize2, RefreshCw } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { pollinationsUrl, promptFromUrl, randomSeed } from "@/lib/lyra-image";
+import { pollinationsUrl, promptFromUrl, randomSeed } from "@/lib/lyrem-image";
 import { cn } from "@/lib/utils";
 
 export function ChatImage({ src, alt }: { src: string; alt?: string | undefined }) {
@@ -34,7 +34,7 @@ export function ChatImage({ src, alt }: { src: string; alt?: string | undefined 
       const href = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = href;
-      a.download = `lyra-${Date.now()}.png`;
+      a.download = `lyrem-${Date.now()}.png`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -57,7 +57,7 @@ export function ChatImage({ src, alt }: { src: string; alt?: string | undefined 
         ) : (
           <img
             src={url}
-            alt={alt || "Imagem gerada pela Lyra AI"}
+            alt={alt || "Imagem gerada pela Lyrem AI"}
             loading="lazy"
             onLoad={() => setLoaded(true)}
             onError={() => setFailed(true)}
@@ -86,10 +86,10 @@ export function ChatImage({ src, alt }: { src: string; alt?: string | undefined 
 
       <Dialog open={zoom} onOpenChange={setZoom}>
         <DialogContent className="max-w-4xl border-primary/30 bg-card/95 p-3">
-          <DialogTitle className="sr-only">{alt || "Imagem gerada pela Lyra AI"}</DialogTitle>
+          <DialogTitle className="sr-only">{alt || "Imagem gerada pela Lyrem AI"}</DialogTitle>
           <img
             src={url}
-            alt={alt || "Imagem gerada pela Lyra AI"}
+            alt={alt || "Imagem gerada pela Lyrem AI"}
             className="max-h-[80vh] w-full rounded-xl object-contain"
           />
         </DialogContent>

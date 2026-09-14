@@ -12,6 +12,7 @@ import { lovable } from "@/integrations/lovable/index";
 type Mode = "login" | "signup";
 
 export const Route = createFileRoute("/auth")({
+  staticData: { sitemap: false },
   validateSearch: (search: Record<string, unknown>): { mode: Mode } => ({
     mode: search["mode"] === "signup" ? "signup" : "login",
   }),

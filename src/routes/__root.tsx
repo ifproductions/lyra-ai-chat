@@ -77,13 +77,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lyra AI" },
-      { name: "description", content: "Converse, crie e trabalhe com a Lyra 4 Pro." },
-      { name: "author", content: "Lyra AI" },
-      { property: "og:title", content: "Lyra AI" },
+      { title: "Lyrem AI" },
+      { name: "description", content: "Converse, crie e trabalhe com a Lyrem 4 Pro." },
+      { name: "author", content: "Lyrem AI" },
+      { property: "og:title", content: "Lyrem AI" },
       {
         property: "og:description",
-        content: "Converse, crie e trabalhe com a Lyra 4 Pro.",
+        content: "Converse, crie e trabalhe com a Lyrem 4 Pro.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

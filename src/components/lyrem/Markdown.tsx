@@ -3,11 +3,11 @@ import remarkGfm from "remark-gfm";
 
 import { ChatImage } from "./ChatImage";
 import { ChatVideo } from "./ChatVideo";
-import { isVideoSrc, promptFromVideoSrc } from "@/lib/lyra-video";
+import { isVideoSrc, promptFromVideoSrc } from "@/lib/lyrem-video";
 
 export function Markdown({ content }: { content: string }) {
   return (
-    <div className="lyra-md text-[15px] text-foreground">
+    <div className="lyrem-md text-[15px] text-foreground">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
@@ -19,7 +19,7 @@ export function Markdown({ content }: { content: string }) {
             }
             return <ChatImage src={src} alt={alt} />;
           },
-          p: ({ children }) => <div className="lyra-p">{children}</div>,
+          p: ({ children }) => <div className="lyrem-p">{children}</div>,
         }}
       >
         {content}

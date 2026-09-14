@@ -1,4 +1,4 @@
-# Lyra AI overhaul
+# Lyrem AI overhaul
 
 - [ ] Rebrand logo, metadata, navigation, and favicon
 - [ ] Rebuild premium chat UI with AI Elements and animations

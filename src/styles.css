@@ -5,7 +5,7 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Lyra AI design system.
+ * Lyrem AI design system.
  * Dark base #0C0A10 with electric purple #9333EA accents.
  * All colors are semantic tokens; never hardcode colors in components.
  */
@@ -151,84 +151,84 @@
     0 18px 60px -20px color-mix(in oklab, var(--color-primary) 55%, transparent);
 }
 
-/* Markdown rendering for Lyra answers */
-.lyra-md {
+/* Markdown rendering for Lyrem answers */
+.lyrem-md {
   line-height: 1.75;
   overflow-wrap: anywhere;
 }
-.lyra-md > * + * {
+.lyrem-md > * + * {
   margin-top: 0.85rem;
 }
-.lyra-md h1,
-.lyra-md h2,
-.lyra-md h3 {
+.lyrem-md h1,
+.lyrem-md h2,
+.lyrem-md h3 {
   font-weight: 600;
   line-height: 1.3;
 }
-.lyra-md h1 {
+.lyrem-md h1 {
   font-size: 1.4rem;
 }
-.lyra-md h2 {
+.lyrem-md h2 {
   font-size: 1.2rem;
 }
-.lyra-md h3 {
+.lyrem-md h3 {
   font-size: 1.05rem;
 }
-.lyra-md a {
+.lyrem-md a {
   color: var(--color-primary);
   text-decoration: underline;
   text-underline-offset: 3px;
 }
-.lyra-md ul,
-.lyra-md ol {
+.lyrem-md ul,
+.lyrem-md ol {
   padding-left: 1.35rem;
 }
-.lyra-md ul {
+.lyrem-md ul {
   list-style: disc;
 }
-.lyra-md ol {
+.lyrem-md ol {
   list-style: decimal;
 }
-.lyra-md li + li {
+.lyrem-md li + li {
   margin-top: 0.3rem;
 }
-.lyra-md blockquote {
+.lyrem-md blockquote {
   border-left: 2px solid var(--color-primary);
   padding-left: 0.9rem;
   color: var(--color-muted-foreground);
 }
-.lyra-md code {
+.lyrem-md code {
   font-family: var(--font-mono);
   font-size: 0.86em;
 }
-.lyra-md :not(pre) > code {
+.lyrem-md :not(pre) > code {
   background: var(--color-secondary);
   border: 1px solid var(--color-border);
   padding: 0.1rem 0.35rem;
   border-radius: 6px;
 }
-.lyra-md pre {
+.lyrem-md pre {
   background: color-mix(in oklab, var(--color-background) 70%, black);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   padding: 1rem;
   overflow-x: auto;
 }
-.lyra-md table {
+.lyrem-md table {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.9rem;
 }
-.lyra-md th,
-.lyra-md td {
+.lyrem-md th,
+.lyrem-md td {
   border: 1px solid var(--color-border);
   padding: 0.5rem 0.7rem;
   text-align: left;
 }
-.lyra-md th {
+.lyrem-md th {
   background: var(--color-secondary);
 }
-.lyra-md hr {
+.lyrem-md hr {
   border-color: var(--color-border);
 }
 

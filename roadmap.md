@@ -1,11 +1,9 @@
-# Lyrem AI overhaul
+# Lyrem AI finalização
 
-- [ ] Rebrand logo, metadata, navigation, and favicon
-- [ ] Rebuild premium chat UI with AI Elements and animations
-- [ ] Add resilient streamed AI backend and fallback
-- [ ] Add attachments and downloadable generated files
-- [ ] Add voice dictation and call mode
-- [ ] Expand settings, profile, privacy, and avatar controls
-- [ ] Add five-language localization
-- [ ] Add Cloud profile preferences and avatar storage
-- [ ] Verify desktop/mobile, auth, chat, media, voice, accessibility
+- [ ] Criar onboarding IF de primeira visita com entrada persistente no chat
+- [ ] Iniciar a barra lateral sempre recolhida
+- [ ] Adicionar saudação, avatar, sugestões e placeholder rotativos
+- [ ] Reforçar anexos multimodais e fallback do chat
+- [ ] Melhorar ditado e modo chamada imersivo
+- [ ] Rever e corrigir os achados SEO disponíveis
+- [ ] Verificar desktop, telemóvel, chat, anexos e voz

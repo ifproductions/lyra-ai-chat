@@ -87,6 +87,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         content: "Converse, crie e trabalhe com a Lyrem 4 Pro.",
       },
       { property: "og:type", content: "website" },
+      {
+        name: "google-site-verification",
+        content: "D3DFMlAHJAjnW1rVAHjWlaQ78lH7BB-tanubqRUeqYo",
+      },
       { name: "twitter:card", content: "summary_large_image" },
       
     ],

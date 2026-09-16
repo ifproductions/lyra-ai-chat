@@ -7,3 +7,5 @@
 - [x] Melhorar ditado e modo chamada imersivo
 - [x] Rever e corrigir os achados SEO disponíveis
 - [x] Verificar desktop, telemóvel, chat, anexos e voz
+- [x] Aplicar o logótipo oficial ao app, favicon e Apple Touch Icon
+- [x] Adicionar vidro desfocado à barra lateral e ao cabeçalho

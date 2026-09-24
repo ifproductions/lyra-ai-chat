@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { Mic, MicOff, PhoneOff } from "lucide-react";
+import { Mic, MicOff, PhoneOff, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { localeTags } from "@/lib/lyrem-i18n";
 import type { LyremSettings } from "@/lib/lyrem-store";
@@ -12,46 +12,22 @@ type Rec = {
   start: () => void;
   stop: () => void;
   abort?: () => void;
-  onresult: ((e: { results: ArrayLike<{ 0: { transcript: string }; isFinal?: boolean }> }) => void) | null;
+  onresult: ((event: { results: ArrayLike<{ 0: { transcript: string }; isFinal?: boolean }> }) => void) | null;
   onend: (() => void) | null;
   onerror: (() => void) | null;
 };
 type Phase = "intro" | "greeting" | "listening" | "thinking" | "speaking" | "idle";
+type VoiceTurn = { id: string; role: "user" | "assistant"; content: string };
 
 const GREETING = "Olá! Tudo bem com você? O que precisa que eu ajude hoje?";
-const BARS = 14;
+const BARS = 22;
 
-/** Full-screen "Modo Live" intro text. Rendered alongside the capsule. */
-export function LiveIntro({ show }: { show: boolean }) {
-  return (
-    <AnimatePresence>
-      {show && (
-        <motion.div
-          key="live-intro"
-          className="pointer-events-none fixed inset-0 z-40 flex items-center justify-center"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0, filter: "blur(16px)" }}
-          transition={{ duration: 0.4 }}
-        >
-          <motion.div
-            className="absolute size-[28rem] rounded-full bg-primary/25 blur-3xl"
-            initial={{ scale: 0.4, opacity: 0 }}
-            animate={{ scale: [0.4, 1.1, 1], opacity: [0, 0.9, 0.6] }}
-            transition={{ duration: 1.2, ease: "easeOut" }}
-          />
-          <motion.h2
-            className="relative font-display text-6xl font-bold tracking-tight text-primary drop-shadow-[0_0_40px_color-mix(in_oklab,var(--color-primary)_70%,transparent)] sm:text-8xl"
-            initial={{ scale: 0.6, opacity: 0, filter: "blur(20px)" }}
-            animate={{ scale: [0.6, 1.08, 1], opacity: 1, filter: "blur(0px)" }}
-            transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
-          >
-            Modo Live
-          </motion.h2>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
+function cleanSpeech(text: string) {
+  return text
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, " ")
+    .replace(/[#*_`[\]()>]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 export function CallMode({
@@ -61,7 +37,6 @@ export function CallMode({
   onTranscript,
   lastResponse,
   streaming,
-  onIntroChange,
 }: {
   open: boolean;
   onClose: () => void;
@@ -69,145 +44,142 @@ export function CallMode({
   onTranscript: (text: string) => void;
   lastResponse: string;
   streaming: boolean;
-  onIntroChange?: (v: boolean) => void;
 }) {
   const [phase, setPhase] = useState<Phase>("intro");
   const [muted, setMuted] = useState(false);
   const [supported, setSupported] = useState(true);
+  const [interim, setInterim] = useState("");
+  const [turns, setTurns] = useState<VoiceTurn[]>([{ id: "greeting", role: "assistant", content: GREETING }]);
   const phaseRef = useRef<Phase>("intro");
   const mutedRef = useRef(false);
   const recRef = useRef<Rec | null>(null);
   const barsRef = useRef<(HTMLSpanElement | null)[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
   const sawStreaming = useRef(false);
+  const responseCommitted = useRef("");
+  const bottomRef = useRef<HTMLDivElement | null>(null);
 
-  const go = useCallback((p: Phase) => {
-    phaseRef.current = p;
-    setPhase(p);
+  const go = useCallback((next: Phase) => {
+    phaseRef.current = next;
+    setPhase(next);
   }, []);
 
   const listen = useCallback(() => {
-    if (!open) return;
-    if (mutedRef.current) return go("idle");
-    const r = recRef.current;
-    if (!r) return go("idle");
+    if (!open || mutedRef.current) return go("idle");
+    if (!recRef.current) return go("idle");
+    setInterim("");
     go("listening");
-    try {
-      r.start();
-    } catch {
-      /* already started */
-    }
+    try { recRef.current.start(); } catch { /* Recognition is already active. */ }
   }, [go, open]);
 
-  const speak = useCallback(
-    (text: string, then: () => void) => {
-      if (!("speechSynthesis" in window)) return then();
-      const u = new SpeechSynthesisUtterance(text.replace(/!\[[^\]]*\]\([^)]*\)/g, " ").replace(/[#*_`[\]()>]/g, " ").slice(0, 2500));
-      u.lang = localeTags[settings.locale];
-      u.onend = then;
-      u.onerror = then;
-      window.speechSynthesis.cancel();
-      window.speechSynthesis.speak(u);
-    },
-    [settings.locale],
-  );
+  const speak = useCallback((text: string, then: () => void) => {
+    if (!("speechSynthesis" in window)) return then();
+    const utterance = new SpeechSynthesisUtterance(cleanSpeech(text).slice(0, 2500));
+    utterance.lang = localeTags[settings.locale];
+    utterance.onend = then;
+    utterance.onerror = then;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utterance);
+  }, [settings.locale]);
 
-  // Setup recognition + intro/greeting sequence
   useEffect(() => {
     if (!open) return;
-    const w = window as unknown as { SpeechRecognition?: new () => Rec; webkitSpeechRecognition?: new () => Rec };
-    const C = w.SpeechRecognition ?? w.webkitSpeechRecognition;
-    if (C) {
-      const r = new C();
-      r.lang = localeTags[settings.locale];
-      r.interimResults = false;
-      r.continuous = false;
-      r.onresult = (e) => {
-        const text = e.results[0]?.[0]?.transcript?.trim();
-        if (text) {
+    const browser = window as unknown as { SpeechRecognition?: new () => Rec; webkitSpeechRecognition?: new () => Rec };
+    const Recognition = browser.SpeechRecognition ?? browser.webkitSpeechRecognition;
+    if (Recognition) {
+      const recognition = new Recognition();
+      recognition.lang = localeTags[settings.locale];
+      recognition.interimResults = true;
+      recognition.continuous = false;
+      recognition.onresult = (event) => {
+        const results = Array.from(event.results);
+        const text = results.map((result) => result[0]?.transcript ?? "").join(" ").trim();
+        setInterim(text);
+        const final = results.some((result) => result.isFinal);
+        if (text && final) {
+          setTurns((current) => [...current, { id: crypto.randomUUID(), role: "user", content: text }]);
+          setInterim("");
           sawStreaming.current = false;
+          responseCommitted.current = "";
           go("thinking");
           onTranscript(text);
         }
       };
-      r.onend = () => {
-        if (phaseRef.current === "listening") setTimeout(() => phaseRef.current === "listening" && listen(), 250);
+      recognition.onend = () => {
+        if (phaseRef.current === "listening") window.setTimeout(listen, 250);
       };
-      r.onerror = () => {
+      recognition.onerror = () => {
         if (phaseRef.current === "listening") go("idle");
       };
-      recRef.current = r;
-    } else setSupported(false);
+      recRef.current = recognition;
+    } else {
+      setSupported(false);
+    }
 
     go("intro");
-    onIntroChange?.(true);
-    const timer = setTimeout(() => {
-      onIntroChange?.(false);
+    const timer = window.setTimeout(() => {
       go("greeting");
-      speak(GREETING, () => listen());
-    }, 1500);
-
-    navigator.mediaDevices?.getUserMedia?.({ audio: true }).then((s) => (streamRef.current = s)).catch(() => {});
+      speak(GREETING, listen);
+    }, 1200);
+    navigator.mediaDevices?.getUserMedia?.({ audio: true }).then((stream) => { streamRef.current = stream; }).catch(() => {});
 
     return () => {
-      clearTimeout(timer);
-      onIntroChange?.(false);
+      window.clearTimeout(timer);
       phaseRef.current = "idle";
       recRef.current?.abort?.();
       recRef.current = null;
       window.speechSynthesis?.cancel();
-      streamRef.current?.getTracks().forEach((t) => t.stop());
+      streamRef.current?.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+  }, [go, listen, onTranscript, open, settings.locale, speak]);
 
-  // Speak the reply once streaming finishes
   useEffect(() => {
     if (!open || phaseRef.current !== "thinking") return;
     if (streaming) {
       sawStreaming.current = true;
       return;
     }
-    if (sawStreaming.current && lastResponse) {
+    if (sawStreaming.current && lastResponse && responseCommitted.current !== lastResponse) {
+      responseCommitted.current = lastResponse;
       sawStreaming.current = false;
+      setTurns((current) => [...current, { id: crypto.randomUUID(), role: "assistant", content: lastResponse }]);
       go("speaking");
-      speak(lastResponse, () => listen());
+      speak(lastResponse, listen);
     }
-  }, [streaming, lastResponse, open, go, speak, listen]);
+  }, [lastResponse, listen, open, speak, streaming, go]);
 
-  // Reactive waveform
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: settings.performanceMode ? "auto" : "smooth" });
+  }, [turns, interim, lastResponse, streaming, settings.performanceMode]);
+
   useEffect(() => {
     if (!open) return;
-    let raf = 0;
-    let ctx: AudioContext | null = null;
+    let frame = 0;
+    let context: AudioContext | null = null;
     let analyser: AnalyserNode | null = null;
     let data: Uint8Array<ArrayBuffer> | null = null;
-    const tick = (t: number) => {
-      const p = phaseRef.current;
+    const tick = (time: number) => {
       if (!analyser && streamRef.current && typeof AudioContext !== "undefined") {
-        ctx = new AudioContext();
-        analyser = ctx.createAnalyser();
+        context = new AudioContext();
+        analyser = context.createAnalyser();
         analyser.fftSize = 64;
-        ctx.createMediaStreamSource(streamRef.current).connect(analyser);
+        context.createMediaStreamSource(streamRef.current).connect(analyser);
         data = new Uint8Array(analyser.frequencyBinCount);
       }
       if (analyser && data) analyser.getByteFrequencyData(data);
-      barsRef.current.forEach((el, i) => {
-        if (!el) return;
-        let v = 0.15;
-        if (p === "listening" && data && !mutedRef.current) v = Math.max(0.12, (data[i + 1] ?? 0) / 255);
-        else if (p === "speaking" || p === "greeting") v = 0.3 + 0.5 * Math.abs(Math.sin(t / 180 + i * 0.7));
-        else if (p === "thinking") v = 0.2 + 0.15 * Math.abs(Math.sin(t / 400 + i * 0.4));
-        el.style.transform = `scaleY(${v})`;
+      barsRef.current.forEach((bar, index) => {
+        if (!bar) return;
+        let value = 0.12;
+        if (phaseRef.current === "listening" && data && !mutedRef.current) value = Math.max(0.12, (data[index + 1] ?? 0) / 255);
+        else if (phaseRef.current === "speaking" || phaseRef.current === "greeting") value = 0.28 + 0.62 * Math.abs(Math.sin(time / 170 + index * 0.58));
+        else if (phaseRef.current === "thinking") value = 0.18 + 0.22 * Math.abs(Math.sin(time / 360 + index * 0.36));
+        bar.style.transform = `scaleY(${value})`;
       });
-      raf = requestAnimationFrame(tick);
+      frame = requestAnimationFrame(tick);
     };
-    raf = requestAnimationFrame(tick);
-    return () => {
-      cancelAnimationFrame(raf);
-      void ctx?.close();
-    };
+    frame = requestAnimationFrame(tick);
+    return () => { cancelAnimationFrame(frame); void context?.close(); };
   }, [open]);
 
   const toggleMute = () => {
@@ -220,74 +192,52 @@ export function CallMode({
     } else if (phaseRef.current === "idle") listen();
   };
 
-  const status = !supported
-    ? "Voz indisponível neste navegador"
-    : muted
-      ? "Microfone desligado"
-      : phase === "listening"
-        ? "A ouvir…"
-        : phase === "thinking"
-          ? "Lyrem a pensar…"
-          : phase === "speaking" || phase === "greeting"
-            ? "Lyrem a falar…"
-            : phase === "intro"
-              ? "A ligar…"
-              : "Em pausa";
+  const status = !supported ? "Voz indisponível neste navegador" : muted ? "Microfone desligado" : phase === "listening" ? "A ouvir" : phase === "thinking" ? "A pensar" : phase === "speaking" || phase === "greeting" ? "Lyrem a falar" : phase === "intro" ? "A iniciar Live" : "Em pausa";
+  const liveReply = phase === "thinking" && lastResponse && lastResponse !== responseCommitted.current ? lastResponse : "";
 
   return (
-    <motion.div
-      layoutId="composer"
-      initial={{ opacity: 0, scale: 0.9, filter: "blur(8px)" }}
+    <motion.section
+      initial={{ opacity: 0, scale: 1.025, filter: "blur(18px)" }}
       animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
-      exit={{ opacity: 0, scale: 0.9, filter: "blur(8px)" }}
-      transition={{ type: "spring", stiffness: 260, damping: 26 }}
-      className="mx-auto flex w-full max-w-xl items-center gap-3 rounded-full border border-primary/30 bg-card/60 p-2 shadow-[0_0_40px_color-mix(in_oklab,var(--color-primary)_25%,transparent)] backdrop-blur-2xl"
+      exit={{ opacity: 0, scale: 0.985, filter: "blur(14px)" }}
+      transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
+      className="fixed inset-0 z-50 flex min-h-dvh flex-col overflow-hidden bg-background text-foreground"
+      aria-label="Modo Live Lyrem AI"
     >
-      <Button
-        type="button"
-        size="icon"
-        variant={muted ? "secondary" : "ghost"}
-        className="size-11 shrink-0 rounded-full"
-        onClick={toggleMute}
-        aria-label={muted ? "Ligar microfone" : "Desligar microfone"}
-      >
-        {muted ? <MicOff className="size-5" /> : <Mic className="size-5" />}
-      </Button>
-      <div className="flex min-w-0 flex-1 items-center justify-center gap-3">
-        <div className="flex h-8 items-center gap-[3px]" aria-hidden>
-          {Array.from({ length: BARS }, (_, i) => (
-            <span
-              key={i}
-              ref={(el) => {
-                barsRef.current[i] = el;
-              }}
-              className="h-8 w-1 origin-center rounded-full bg-primary shadow-[0_0_8px_var(--color-primary)] transition-transform duration-75"
-              style={{ transform: "scaleY(.15)" }}
-            />
-          ))}
+      <header className="flex h-20 shrink-0 items-center justify-between border-b border-border/60 px-5 sm:px-8">
+        <div className="flex items-center gap-3">
+          <motion.span animate={{ scale: phase === "listening" ? [1, 1.25, 1] : 1 }} transition={{ repeat: phase === "listening" ? Infinity : 0, duration: 1.5 }} className="grid size-9 place-items-center rounded-full bg-primary/15 text-primary"><Sparkles className="size-4" /></motion.span>
+          <div><h1 className="text-sm font-semibold">Lyrem Live</h1><p className="text-xs text-muted-foreground">Conversa por voz</p></div>
         </div>
-        <AnimatePresence mode="wait">
-          <motion.span
-            key={status}
-            initial={{ opacity: 0, y: 6, filter: "blur(4px)" }}
-            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-            exit={{ opacity: 0, y: -6, filter: "blur(4px)" }}
-            className="truncate text-sm font-medium"
-            aria-live="polite"
-          >
-            {status}
-          </motion.span>
-        </AnimatePresence>
+        <AnimatePresence mode="wait"><motion.p key={status} initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }} className="text-xs font-medium text-muted-foreground" aria-live="polite">{status}</motion.p></AnimatePresence>
+      </header>
+
+      <div className="relative min-h-0 flex-1 overflow-y-auto">
+        <div className="mx-auto flex min-h-full w-full max-w-4xl flex-col justify-end px-5 pb-44 pt-16 sm:px-10">
+          <AnimatePresence>
+            {phase === "intro" && (
+              <motion.div initial={{ opacity: 0, scale: 0.72, filter: "blur(22px)" }} animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }} exit={{ opacity: 0, scale: 1.12, filter: "blur(18px)" }} transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }} className="absolute inset-0 grid place-items-center">
+                <div className="text-center"><p className="text-xs font-semibold uppercase text-primary tracking-[.35em]">Lyrem AI</p><h2 className="mt-4 font-display text-5xl font-semibold sm:text-7xl">Modo Live</h2></div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {phase !== "intro" && <div className="space-y-7">
+            {turns.map((turn) => <motion.div key={turn.id} initial={{ opacity: 0, y: 18, filter: "blur(8px)" }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} className={turn.role === "user" ? "ml-auto w-fit max-w-[82%] rounded-2xl rounded-tr-sm bg-primary px-5 py-3 text-primary-foreground" : "max-w-2xl text-lg leading-relaxed sm:text-xl"}><span className="mb-2 block text-[10px] font-semibold uppercase text-muted-foreground tracking-[.2em]">{turn.role === "user" ? "Tu" : "Lyrem"}</span><p className="whitespace-pre-wrap">{cleanSpeech(turn.content)}</p></motion.div>)}
+            {interim && <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="ml-auto w-fit max-w-[82%] rounded-2xl rounded-tr-sm border border-primary/25 bg-primary/10 px-5 py-3"><span className="mb-2 block text-[10px] font-semibold uppercase text-primary tracking-[.2em]">A transcrever</span><p className="text-base">{interim}</p></motion.div>}
+            {phase === "thinking" && <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} className="max-w-2xl"><span className="mb-2 block text-[10px] font-semibold uppercase text-primary tracking-[.2em]">Lyrem</span>{liveReply ? <motion.p key={liveReply.length} initial={{ opacity: 0.5 }} animate={{ opacity: 1 }} className="whitespace-pre-wrap text-lg leading-relaxed sm:text-xl">{cleanSpeech(liveReply)}</motion.p> : <p className="text-lg text-muted-foreground">A formular a resposta…</p>}</motion.div>}
+            <div ref={bottomRef} />
+          </div>}
+        </div>
       </div>
-      <Button
-        type="button"
-        variant="destructive"
-        className="h-11 shrink-0 rounded-full px-4 shadow-[0_0_24px_color-mix(in_oklab,var(--color-destructive)_55%,transparent)]"
-        onClick={onClose}
-      >
-        <PhoneOff className="size-4" />
-        <span className="max-sm:sr-only">Encerrar Live</span>
-      </Button>
-    </motion.div>
+
+      <div className="absolute inset-x-0 bottom-0 px-4 pb-5 pt-12 sm:pb-8">
+        <motion.div initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.35, type: "spring", stiffness: 230, damping: 24 }} className="mx-auto flex h-20 w-full max-w-2xl items-center gap-4 rounded-[2rem] border border-border bg-card px-3 shadow-[0_18px_70px_color-mix(in_oklab,var(--color-primary)_22%,transparent)]">
+          <Button type="button" size="icon" variant={muted ? "secondary" : "ghost"} className="size-12 shrink-0 rounded-full transition-transform hover:scale-105" onClick={toggleMute} aria-label={muted ? "Ligar microfone" : "Desligar microfone"}>{muted ? <MicOff className="size-5" /> : <Mic className="size-5" />}</Button>
+          <div className="flex h-10 min-w-0 flex-1 items-center justify-center gap-[3px]" aria-hidden>{Array.from({ length: BARS }, (_, index) => <span key={index} ref={(element) => { barsRef.current[index] = element; }} className="h-9 w-1 origin-center rounded-full bg-primary transition-transform duration-75" />)}</div>
+          <Button type="button" variant="destructive" className="h-12 shrink-0 rounded-full px-5 shadow-[0_8px_30px_color-mix(in_oklab,var(--color-destructive)_32%,transparent)] transition-transform hover:scale-105" onClick={onClose}><PhoneOff className="size-5" /><span className="max-sm:sr-only">Encerrar Live</span><span className="hidden sm:inline">Encerrar</span></Button>
+        </motion.div>
+      </div>
+    </motion.section>
   );
 }

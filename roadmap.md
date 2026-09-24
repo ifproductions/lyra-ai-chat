@@ -13,3 +13,5 @@
 - [x] Manter o logótipo Lyrem ao centro quando autenticado
 - [x] Caixa de texto em cápsula de vidro e "A ouvir" animado no ditado
 - [x] Modo Live no próprio ecrã (intro animada, cápsula de controlo, saudação e diálogo por voz)
+- [ ] Refazer o Modo Live em ecrã sólido com conversa de voz textual
+- [ ] Aplicar as correções finais do documento anexado ao chat e à barra lateral

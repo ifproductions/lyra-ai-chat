@@ -264,3 +264,8 @@
 
 .performance-mode *, .performance-mode *::before, .performance-mode *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; } }
+
+@keyframes shimmer-text {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}

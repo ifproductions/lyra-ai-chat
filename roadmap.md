@@ -9,3 +9,7 @@
 - [x] Verificar desktop, telemóvel, chat, anexos e voz
 - [x] Aplicar o logótipo oficial ao app, favicon e Apple Touch Icon
 - [x] Adicionar vidro desfocado à barra lateral e ao cabeçalho
+- [ ] Modo claro por defeito com logótipo retangular claro
+- [ ] Manter o logótipo Lyrem ao centro quando autenticado
+- [ ] Caixa de texto em cápsula de vidro e "A ouvir" animado no ditado
+- [ ] Modo Live no próprio ecrã (intro animada, cápsula de controlo, saudação e diálogo por voz)

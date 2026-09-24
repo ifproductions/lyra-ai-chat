@@ -2,8 +2,6 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 import { ChatImage } from "./ChatImage";
-import { ChatVideo } from "./ChatVideo";
-import { isVideoSrc, promptFromVideoSrc } from "@/lib/lyrem-video";
 
 export function Markdown({ content }: { content: string }) {
   return (
@@ -14,9 +12,6 @@ export function Markdown({ content }: { content: string }) {
           a: (props) => <a {...props} target="_blank" rel="noreferrer" />,
           img: ({ src, alt }) => {
             if (typeof src !== "string") return null;
-            if (isVideoSrc(src)) {
-              return <ChatVideo prompt={promptFromVideoSrc(src)} alt={alt} />;
-            }
             return <ChatImage src={src} alt={alt} />;
           },
           p: ({ children }) => <div className="lyrem-p">{children}</div>,

@@ -44,6 +44,8 @@ export function CallMode({
   onTranscript: (text: string) => void;
   lastResponse: string;
   streaming: boolean;
+  onIntroChange?: any;
+
 }) {
   const [phase, setPhase] = useState<Phase>("intro");
   const [muted, setMuted] = useState(false);
@@ -240,4 +242,7 @@ export function CallMode({
       </div>
     </motion.section>
   );
+}
+export function LiveIntro(_props: any) {
+  return null;
 }
